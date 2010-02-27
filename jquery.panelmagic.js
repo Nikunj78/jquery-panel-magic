@@ -1,11 +1,12 @@
 /**
- *  jquery.panelmagic.js
- *  Desktop
- *  
- *  Created by Craig Hoover on 2010-02-08.
- *  Copyright 2010 Craig Hoover. All rights reserved.
- *  
- *  Made possible using the scrollto plugin
+ * jQuery.panelmagic.js
+ * Copyright (c) 2010 Craig Hoover - crh3675(at)gmail(dot)com | http://standardscompliance.com
+ * Dual licensed under MIT and GPL.
+ * Date: 2/27/2010
+ * @author Craig Hoover
+ * @version BETA
+ * 
+ * http://code.google.com/p/jquery-panel-magic/
  */
 
 var $jq = {};
@@ -34,14 +35,14 @@ $jq.panelMagic = function(ops)
 		$jq('body').css({overflow:'hidden',overflowX:'hidden',overflowY:'hidden'});
 		
 		this.options = {
-			opener:null,
+			openingPanel:null,
 			scrollTimer:1500,
-			panelClass:'panel',
-			menuLoader:null,
-			menuLoaderOpacity:1,
 			scrollEasing:null,
+			panelClass:'panel',
+			gridLoader:null,
+			gridLoaderOpacity:1,
+			gridLoaderOffset:{top:10,right:10,bottom:'none',left:'none'},
 			resizeTimer:500, // pause before running resize event
-			menuLoaderOffset:{top:10,right:10,bottom:'none',left:'none'},
 			beforeRestorePanels:function(){},
 			afterRestorePanels:function(){},
 			afterLoadOverview:function(){},
@@ -50,44 +51,44 @@ $jq.panelMagic = function(ops)
 		
 		$jq.extend(this.options,ops);
 		
+		// object private properties
 		this.resizeTimer = null;
 		this.windowWidth = $jq(window).width();
-		this.oldheight = 0;
-		this.oldwidth = 0;		
-		this.zoomed = false;
+		this.windowOldHeight = 0;
+		this.windowOldWidth = 0;		
+		this.windowResized = false;
+		this.gridActive = false;
+		this.gridPanels = $jq(('.'+this.options.panelClass));
+		this.gridMatrix = this.calcMatrix.call(this);
 		this.firstLoad = true;
 		this.currentPanel = null;
-		this.resized = false;
-		this.panels = $jq(('.'+this.options.panelClass));
-		this.matrix = this.calcMatrix.call(this);
-		this.setPanels.call(this);		
-		this.initMenuLoader(this);
+		this.setup.call(this);		
 	};
 
 	// matrix calculations
 	this.calcMatrix = function()
 	{
-		for(i=1;i<=this.panels.length;i++)
+		for(i=1;i<=this.gridPanels.length;i++)
 		{		
 			var sq = Math.pow(i,2);
-			if(sq == this.panels.length)
+			if(sq == this.gridPanels.length)
 			{
 				return [i,i];
 			}
-			else if(sq > this.panels.length)
+			else if(sq > this.gridPanels.length)
 			{
 				return [i, i--];
 			} 
 		}			
 	};
 	
-	this.initMenuLoader = function()
+	this.initGridLoader = function()
 	{
 		var $inst = this;
 		
-		if($inst.options.menuLoader)
+		if($inst.options.gridLoader)
 		{
-			var $ldr = $jq($inst.options.menuLoader);
+			var $ldr = $jq($inst.options.gridLoader);
 			$ldr.css({display:'none',position:'absolute'}).bind('click', function(){ 
 				$jq(this).fadeOut('fast'); $inst.showOverview.call($inst,$inst)
 			}, false);
@@ -114,12 +115,9 @@ $jq.panelMagic = function(ops)
 	{
 		var $inst = this;
 		$inst.sw = parseInt($jq(window).width()), $inst.sh = parseInt($jq(window).height());
-		var rows = $inst.matrix[0];
-		var cols = $inst.matrix[1];
+		var rows = $inst.gridMatrix[0];
+		var cols = $inst.gridMatrix[1];
 		var idx = 0;
-
-		$inst.canvasWidth = $inst.sw * cols;
-		$inst.canvasHeight = $inst.sh * rows;
 
 		// establish rows
 		for(r=1;r<=rows;r++)
@@ -130,7 +128,7 @@ $jq.panelMagic = function(ops)
 			for(c=1;c<=cols;c++)
 			{
 				var left = (c-1) * $inst.sw;
-				var $panel = $jq($inst.panels[idx]);
+				var $panel = $jq($inst.gridPanels[idx]);
 
 				if($panel.length == 0) break;
 
@@ -138,7 +136,7 @@ $jq.panelMagic = function(ops)
 				var off = $inst.getPanelOffsets.call($panel);
 				var width = $inst.sw - off.left - off.right;
 				var height = $inst.sh - off.top - off.bottom;
-				var $panel = $jq($inst.panels[idx]).css({width:width,height:height,display:'none',position:'absolute'});	
+				var $panel = $jq($inst.gridPanels[idx]).css({width:width,height:height,display:'none',position:'absolute'});	
 				$panel.get(0).defaultTop = top;
 				$panel.get(0).defaultLeft = left;
 				idx++;
@@ -147,10 +145,10 @@ $jq.panelMagic = function(ops)
 				// otherwise idx is always the max value
 				(function(idx){
 					$panel.animate({top:top,left:left},100, function(){
-						if(idx == $inst.panels.length)
+						if(idx == $inst.gridPanels.length)
 						{
-							$inst.oldwidth = width;
-							$inst.oldheight = height;
+							$inst.windowOldWidth = width;
+							$inst.windowOldHeight = height;
 							
 							if(callback) callback.call($inst);
 						}
@@ -161,18 +159,16 @@ $jq.panelMagic = function(ops)
 	}
 
 	// set panels in matrix
-	this.setPanels = function()
+	this.setup = function()
 	{			
 		var $inst = this;		
 		$inst.positionPanels.call($inst ,function(){
 
-			// scroll to first selected element
-			$inst.currentPanel = $inst.options.opener ? $jq($inst.options.opener) : $inst.panels[0];
-
-
-			$inst.panels.css({display:'block'}).bind('mousedown', {inst:$inst}, this.focusOnPanel );
+			// set opening panel
+			$inst.currentPanel = $inst.options.openingPanel ? $jq($inst.options.openingPanel) : $inst.gridPanels[0];
+			$inst.gridPanels.css({display:'block'}).bind('mousedown', {inst:$inst}, this.setPanelActive );
 		
-			// go to first panel
+			// go to opening panel
 			$jq.scrollTo($inst.currentPanel,$inst.options.scrollTimer,{easing:$inst.options.scrollEasing,onAfter:function(){
 
 				// reposition our menuloader after panel is selected
@@ -180,25 +176,24 @@ $jq.panelMagic = function(ops)
 				
 				// bind a resize event to the window to handle redraw
 				$jq(window).bind('resize', function(){ 
-					$inst.resized = true; 
+					$inst.windowResized = true; 
 					$inst.windowWidth = $jq(window).width();
 					
 					// we have a custom resize to stop flickering
-					// upon complete, executes the function called to it
-					
+					// upon complete, executes the function called to it					
 					$inst.resizeWait(function(){
 						var $inst = this;
 						
-						// when zoomed, fix scale of panel grid
-						if($inst.zoomed) 
+						// when gridActive, fix scale of panel grid
+						if($inst.gridActive) 
 						{ 
-							$inst.transformScale.call($inst);
+								$inst.redrawGridLayout.call($inst);
 						}
 						else
 						{
-							// not zoomed, reposition panels
+							// not gridActive, reposition panels
 							$inst.positionPanels.call($inst,function(){
-								$inst.panels.show();
+								$inst.gridPanels.show();
 								$panel = $jq($inst.currentPanel);
 							
 								$jq('body').attr({
@@ -217,6 +212,8 @@ $jq.panelMagic = function(ops)
 				});
 			}});	
 		});
+		
+		$inst.initGridLoader();
 	};
 	
 	this.resizeWait = function(callback)
@@ -237,29 +234,29 @@ $jq.panelMagic = function(ops)
 		}		
 	}
 	
-	this.focusOnPanel = function(event)
+	this.setPanelActive = function(event)
 	{
 		var $inst = event.data.inst;
 				
-		if($inst.zoomed)
+		if($inst.gridActive)
 		{
 			$node = $jq(this);
 			event.stopPropagation();
 			event.preventDefault();
 			$inst.currentPanel = $jq(this);
-			$inst.restoreScale.call($inst);
+			$inst.hideGridLayout.call($inst);
 			return false;		
 		}		
 	}
 
 	// bring us back to our regular display
-	this.restoreScale = function()
+	this.hideGridLayout = function()
 	{
 		var $inst = this;  
-		var len = $inst.panels.length;
+		var len = $inst.gridPanels.length;
 		var cnt = 0;
 		
-		$inst.panels.fadeOut('fast',function(){
+		$inst.gridPanels.fadeOut('fast',function(){
 			cnt++;
 
 			if(cnt == len)
@@ -286,11 +283,11 @@ $jq.panelMagic = function(ops)
 				$inst.options.beforeRestorePanels.call($inst);	
 				
 				var xcnt = 0;
-				$inst.panels.css({cursor:'auto'}).fadeIn('fast',function(){
+				$inst.gridPanels.css({cursor:'auto'}).fadeIn('fast',function(){
 					xcnt++;
 					if(xcnt == len)
 					{
-						$inst.zoomed = false;
+						$inst.gridActive = false;
 						$inst.options.afterRestorePanels.call($inst);
 						$jq.scrollTo('#'+$inst.currentPanel.attr('id'), $inst.options.scrollTimer, {easing:$inst.options.scrollEasing, onAfter:function(){
 							$inst.repositionMenuLoader.call($inst);
@@ -305,17 +302,17 @@ $jq.panelMagic = function(ops)
 	{
 		var $inst = this;
 		
-		if($inst.options.menuLoader)
+		if($inst.options.gridLoader)
 		{
 			var $el = $jq($inst.currentPanel);
-			var $cnt = $jq($inst.options.menuLoader);
+			var $cnt = $jq($inst.options.gridLoader);
 			var sl = $el.get(0).offsetLeft, st = $el.get(0).offsetTop, sw = $jq(window).width(), sh = $jq(window).height();
 			var cw = $cnt.width(), ch = $cnt.height();
 			var offsets = {};
 			
-			if($inst.options.menuLoaderOffset)
+			if($inst.options.gridLoaderOffset)
 			{
-				var o = $inst.options.menuLoaderOffset;
+				var o = $inst.options.gridLoaderOffset;
 				
 				if (o.left && String(o.left).match(/none|auto/)) offsets.left = 'auto'; 				
 				if (o.left && !isNaN(o.left)) offsets.left = sl + o.left;	
@@ -331,7 +328,7 @@ $jq.panelMagic = function(ops)
 			}						
 			
 			$cnt.css({
-				opacity:$inst.options.menuLoaderOpacity,
+				opacity:$inst.options.gridLoaderOpacity,
 				top: offsets.top,
 				left: offsets.left
 			}).fadeIn();
@@ -360,19 +357,19 @@ $jq.panelMagic = function(ops)
 	};
 
 	//  scales the interface and redraws all pages on screen
-	this.transformScale = function()
+	this.redrawGridLayout = function()
 	{  
 		var $inst = this;
 
 		var wh = parseInt($jq(window).height());
 		var ww = parseInt($jq(window).width());
-		var scale = (wh/($inst.matrix[0] * wh)); // window height/(matrix columns * window height)
-		var iter = $inst.matrix[1] * (ww * scale); // matrix rows * (window width * scale)
+		var scale = (wh/($inst.gridMatrix[0] * $inst.sh));
+		var iter = $inst.gridMatrix[1] * ($inst.sw * scale);
 		var diff = (ww - iter)/2;
 		var origin = diff + (diff * scale);
 		origin = Math.round(((origin / ww) * 100)*100)/100;
-		
-		$inst.panels.css({opacity:1,display:'block',cursor:'pointer'});
+
+		$inst.gridPanels.css({opacity:1,display:'block',cursor:'pointer'});
 
 		// for FF, Safari
 		$jq('body').css({
@@ -399,14 +396,14 @@ $jq.panelMagic = function(ops)
 				
 				// get the difference of the resized window according to the new
 				// sizes of the elements and add to left position - keeps them centered
-				var xadd = (parseFloat($jq(window).width()) - ((this.offsetWidth * scale) * $inst.matrix[0]))/2;
+				var xadd = (parseFloat($jq(window).width()) - ((this.offsetWidth * scale) * $inst.gridMatrix[0]))/2;
 				
 				$jq(this).css({left:cssleft + xadd,top:csstop});
 			});		
 		}
 
-		$inst.zoomed = true;
-		$inst.resized = false;
+		$inst.gridActive = true;
+		$inst.windowResized = false;
 
 	};
 
@@ -428,13 +425,13 @@ $jq.panelMagic = function(ops)
 		var $inst = inst;
 		//$inst.currentPanel = $inst.findPanel(caller);
 
-		if(!$inst.zoomed)
+		if(!$inst.gridActive)
 		{
 			if($inst.firstLoad && $inst.options.showOverviewOnload)
 			{
-				$inst.transformScale.call($inst);	
-				$inst.zoomed = true;      	      
-				$inst.panels.fadeIn('fast');	
+				$inst.redrawGridLayout.call($inst);	
+				$inst.gridActive = true;      	      
+				$inst.gridPanels.fadeIn('fast');	
 				$inst.firstLoad = false;
 				$inst.options.afterLoadOverview.call($inst);	
 			}
@@ -442,12 +439,12 @@ $jq.panelMagic = function(ops)
 			{
 				var cnt = 0;				
 					
-				$inst.panels.fadeOut('fast',function(){
-					if(cnt == $inst.panels.length -1)
+				$inst.gridPanels.fadeOut('fast',function(){
+					if(cnt == $inst.gridPanels.length -1)
 					{
-						$inst.transformScale.call($inst);	
-						$inst.zoomed = true;      	      
-						$inst.panels.fadeIn('fast',function(){
+						$inst.redrawGridLayout.call($inst);	
+						$inst.gridActive = true;      	      
+						$inst.gridPanels.fadeIn('fast',function(){
 							$inst.options.afterLoadOverview.call($inst);
 						});	   
 					}
@@ -457,7 +454,7 @@ $jq.panelMagic = function(ops)
 		}
 		else
 		{
-			$inst.restoreScale.call($inst);
+			$inst.hideGridLayout.call($inst);
 		}
 	};
 
