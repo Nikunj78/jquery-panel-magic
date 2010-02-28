@@ -39,13 +39,15 @@ $jq.panelMagic = function(ops)
 			scrollTimer:1500,
 			scrollEasing:null,
 			panelClass:'panel',
+			panelPreviews:true,
+			panelPreviewScale: 1.5,
 			gridLoader:null,
 			gridLoaderOpacity:1,
 			gridLoaderOffset:{top:10,right:10,bottom:'none',left:'none'},
 			resizeTimer:500, // pause before running resize event
 			beforeRestorePanels:function(){},
 			afterRestorePanels:function(){},
-			afterLoadOverview:function(){},
+			afterLoadGrid:function(){},
 			afterLoadPanel:function(){}
 		};
 		
@@ -90,7 +92,7 @@ $jq.panelMagic = function(ops)
 		{
 			var $ldr = $jq($inst.options.gridLoader);
 			$ldr.css({display:'none',position:'absolute'}).bind('click', function(){ 
-				$jq(this).fadeOut('fast'); $inst.showOverview.call($inst,$inst)
+				$jq(this).fadeOut('fast'); $inst.showGrid.call($inst,$inst)
 			}, false);
 		}
 	}
@@ -166,7 +168,12 @@ $jq.panelMagic = function(ops)
 
 			// set opening panel
 			$inst.currentPanel = $inst.options.openingPanel ? $jq($inst.options.openingPanel) : $inst.gridPanels[0];
+			
+			// bind events
 			$inst.gridPanels.css({display:'block'}).bind('mousedown', {inst:$inst}, this.setPanelActive );
+				
+			// check if they want a preview
+			if($inst.options.panelPreviews) $inst.gridPanels.bind('mouseover', {inst:$inst}, this.showPanelPreview );
 		
 			// go to opening panel
 			$jq.scrollTo($inst.currentPanel,$inst.options.scrollTimer,{easing:$inst.options.scrollEasing,onAfter:function(){
@@ -216,6 +223,84 @@ $jq.panelMagic = function(ops)
 		$inst.initGridLoader();
 	};
 	
+	this.showPanelPreview = function(event)
+	{
+		var $inst = event.data.inst;
+		
+		if ($inst.gridActive )
+		{
+			$inst.hidePanelPreviews.call($inst);
+			
+			if(!this.panelPreview)
+			{
+				var $panel = $jq(this);
+				var $clone = $jq(this).clone(true);
+				var clone = $clone.get(0);
+				
+				var upscale = $inst.options.panelPreviewScale;
+				try{
+					var ratio = parseFloat($jq('body').css('MozTransform').match(/\d\.?\d+/)[0]) || parseFloat($jq('body').css('WebkitTransform').match(/\d\.?\d+/)[0]);
+				}catch(e){
+					return;
+				}
+				var ww = parseFloat($jq(window).width()) * $inst.gridMatrix[0];
+				var wh = parseFloat($jq(window).height()) * $inst.gridMatrix[1];
+				var pw = parseFloat(this.offsetWidth) * ratio;
+				var ph = parseFloat(this.offsetHeight) * ratio;
+				var cw = pw * upscale;
+				var ch = ph * upscale;
+				
+				var nl = parseFloat(this.offsetLeft) - (cw - pw/2);				
+				nl = nl < 0 ? 0 : nl;
+				nl = nl + cw >= ww ? ww - cw : nl;
+				
+				var nt = parseFloat(this.offsetTop) - (ch - ph/2);				
+				nt = nt < 0 ? 0 : nt;
+				nt = nt + ch >= wh ? wh - ch : nt;
+				
+				$clone
+					.css({
+						position:'absolute',
+						left: nl,
+						top: nt,
+						MozTransformOrigin:'0% 0%',
+						MozTransform:'scale('+upscale+')',
+						WebkitTransformOrigin:'0% 0%',
+						WebkitTransform:'scale('+upscale+')',
+						zIndex: parseInt($panel.css('zIndex')) + 1,
+						display:'none'
+					})
+					.unbind('mouseover') // removes inherited event
+					.unbind('mousedown') // removes inherited event
+					.bind('mousedown',function(){ $jq(this.parentPanel).trigger('mousedown')});
+			
+				$jq('body').append($clone);		
+				
+				$clone.show();
+				
+				this.panelPreview = clone;
+				clone.parentPanel = this;
+			}
+		}		
+	}
+	
+	
+	this.hidePanelPreviews = function()
+	{
+		var $inst = this;
+		
+		if ($inst.gridActive )
+		{
+			$inst.gridPanels.each(function(){
+				if(this.panelPreview) 
+				{
+					$jq(this.panelPreview).stop().remove();
+					this.panelPreview = null;
+				}
+			});
+		}			
+	}
+	
 	this.resizeWait = function(callback)
 	{	
 		var $inst = this;
@@ -239,12 +324,16 @@ $jq.panelMagic = function(ops)
 		var $inst = event.data.inst;
 				
 		if($inst.gridActive)
-		{
+		{			
 			$node = $jq(this);
-			event.stopPropagation();
-			event.preventDefault();
+			
+			if(this.panelPreview) $jq(this.panelPreview).remove();
+			
 			$inst.currentPanel = $jq(this);
 			$inst.hideGridLayout.call($inst);
+			
+			event.stopPropagation();
+			event.preventDefault();
 			return false;		
 		}		
 	}
@@ -255,6 +344,8 @@ $jq.panelMagic = function(ops)
 		var $inst = this;  
 		var len = $inst.gridPanels.length;
 		var cnt = 0;
+		
+		$inst.hidePanelPreviews.call($inst);
 		
 		$inst.gridPanels.fadeOut('fast',function(){
 			cnt++;
@@ -420,20 +511,20 @@ $jq.panelMagic = function(ops)
 	}
 
 	// show the overview for the site
-	this.showOverview = function(inst)
+	this.showGrid = function(inst)
 	{
 		var $inst = inst;
 		//$inst.currentPanel = $inst.findPanel(caller);
 
 		if(!$inst.gridActive)
 		{
-			if($inst.firstLoad && $inst.options.showOverviewOnload)
+			if($inst.firstLoad && $inst.options.showGridOnload)
 			{
 				$inst.redrawGridLayout.call($inst);	
 				$inst.gridActive = true;      	      
 				$inst.gridPanels.fadeIn('fast');	
 				$inst.firstLoad = false;
-				$inst.options.afterLoadOverview.call($inst);	
+				$inst.options.afterLoadGrid.call($inst);	
 			}
 			else
 			{
@@ -445,7 +536,7 @@ $jq.panelMagic = function(ops)
 						$inst.redrawGridLayout.call($inst);	
 						$inst.gridActive = true;      	      
 						$inst.gridPanels.fadeIn('fast',function(){
-							$inst.options.afterLoadOverview.call($inst);
+							$inst.options.afterLoadGrid.call($inst);
 						});	   
 					}
 					cnt++;
