@@ -112,7 +112,17 @@
 	</div>
 	<script type="text/javascript">
 	/*<![CDATA[*/		
-		var $pm = $jq.panelMagic({resizeTimer:750,opener:'#purple',scrollTimer:1500,scrollEasing:'bounceout',menuLoader:'#overview',menuLoaderOpacity:.5,menuLoaderOffset:{bottom:20,right:20}});
+		var $pm = $jq.panelMagic({
+			resizeTimer:750,
+			openingPanel:'#purple',
+			panelPreviews: true,
+			panelPreviewScale: 1.25,
+			scrollTimer:1500,
+			scrollEasing:'bounceout',
+			gridLoader:'#overview',
+			gridLoaderOpacity:.5,
+			gridLoaderOffset:{bottom:20,right:20}
+		});
 	/*]]>*/	
 	</script>
 </body>
