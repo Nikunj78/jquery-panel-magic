@@ -32,7 +32,8 @@ $jq.panelMagic = function(ops)
 	// initializer
 	this.init = function(ops)
 	{
-		$jq('body').css({padding:0,margin:0,overflow:'hidden',overflowX:'hidden',overflowY:'hidden'});
+		$jq('body').css({padding:0,margin:0,overflow:'hidden'});
+		if($jq.browser.msie) $jq(document.documentElement).css({overflow:'hidden'});
 		
 		// our options that users can configure
 		this.options = {
@@ -126,7 +127,7 @@ $jq.panelMagic = function(ops)
 				var off = inst.getPanelOffsets.call($panel);
 				var width = inst._windowWidth - off.left - off.right;
 				var height = inst._windowHeight - off.top - off.bottom;
-				var $panel = $jq(inst._gridPanels[idx]).css({width:width,height:height,visibility:'hidden',display:'block',position:'absolute'});	
+				var $panel = $jq(inst._gridPanels[idx]).css({width:width,height:height,display:'block',position:'absolute'});	
 				$panel.get(0).defaultTop = top;
 				$panel.get(0).defaultLeft = left;
 				idx++;				
@@ -161,22 +162,22 @@ $jq.panelMagic = function(ops)
 			inst._currentPanel = inst.options.openingPanel ? $jq(inst.options.openingPanel) : inst._gridPanels[0];
 			
 			// bind events
-			inst._gridPanels.css({display:'block',visibility:'visible'}).bind('mousedown', {inst:inst}, this.setPanelActive );
+			inst._gridPanels.css({display:'block'}).bind('mousedown', {inst:inst}, this.setPanelActive );
 				
 			// check if they want a preview
 			if(inst.options.panelPreviews) inst._gridPanels.bind('mouseover', {inst:inst}, this.showPanelPreview );
 		
-			// bind a resize event to the window to handle redraw
+			// bind a resize event to the window to handle redraw			
 			$jq(window).bind('resize', function(){ 
-				inst._windowResized = true; 
-				inst._windowWidth = $jq(window).width();
-				
-				// we have a custom resize to stop flickering
-				// upon complete, executes the function called to it					
-				inst.resizeWait(function(){
-					window.location.reload();
-				});
-			});		
+				window.clearTimeout(inst._resizeTimer);
+				inst._resizeTimer = window.setTimeout(function(){
+					if(inst._windowWidth != parseInt($jq(window).width()) && inst._windowHeight != parseInt($jq(window).height()))
+					{
+						window.location.reload();					
+					}
+				}, inst.options.resizeTimer);
+			});
+					
 			
 			// show grid if url matches
 			var re = new RegExp(inst.options.gridURLParam + '=true');
@@ -203,6 +204,8 @@ $jq.panelMagic = function(ops)
 	this.showPanelPreview = function(event)
 	{
 		var inst = event.data.inst;
+		
+		if ($jq.browser.msie) return;
 		
 		// hide panel previews
 		inst.hidePanelPreviews.call(inst);
@@ -253,8 +256,8 @@ $jq.panelMagic = function(ops)
 						top: nt,
 						MozTransformOrigin:'0% 0%',
 						MozTransform:'scale('+upscale+')',
-						WebkitTransformOrigin:'0% 0%',
-						WebkitTransform:'scale('+upscale+')',
+						webkitTransformOrigin:'0% 0%',
+						webkitTransform:'scale('+upscale+')',
 						zIndex:10000,
 						display:'none'
 					})
@@ -284,7 +287,7 @@ $jq.panelMagic = function(ops)
 				if(panel.panelPreview) 
 				{
 					$jq(panel.panelPreview).stop().remove();
-					delete panel['panelPreview'];	
+					panel.panelPreview = null;
 				}
 			}
 		}			
@@ -312,19 +315,23 @@ $jq.panelMagic = function(ops)
 	{
 		var inst = event.data.inst;
 		var panel = event.target;
+		
+		if($jq.browser.msie) var panel = inst.findPanel(event.target);
 				
 		if(inst._gridActive)
 		{						
 			$node = $jq(panel);
 			inst._gridActive = false;
 			
-			inst.hidePanelPreviews.call(inst);
+			inst.hidePanelPreviews.call(inst);			
 			
-			if(panel.panelPreview) $jq(panel.panelPreview).remove();
+			if(panel.panelPreview) $jq(panel.panelPreview).remove();			
+			
 			inst.hideGridLayout.call(inst, panel);
 			
-			var loc = String(window.location);
+			var loc = window.location.href;
 			window.location = loc.substr(0,loc.indexOf('#')) + '#/'+inst.options.panelURLParam+'=' + $jq(panel).attr('id');
+
 	
 			event.stopPropagation();
 			event.preventDefault();
@@ -340,18 +347,18 @@ $jq.panelMagic = function(ops)
 		var len = inst._gridPanels.length;
 		var cnt = 0;
 		
-		inst.hidePanelPreviews.call(inst);		
+		inst.hidePanelPreviews.call(inst);	
 		
 		inst._gridPanels.fadeOut('fast',function(){
 			cnt++;
 
 			if(cnt == len)
-			{
+			{				
 				$jq('body').css({
 					MozTransformOrigin:'0% 0%',
 					MozTransform:'scale(1)',
-					WebkitTransformOrigin:'0% 0%',
-					WebkitTransform:'scale(1)'
+					webkitTransformOrigin:'0% 0%',
+					webkitTransform:'scale(1)'
 				});
 				
 				if($jq.browser.msie)
@@ -461,16 +468,18 @@ $jq.panelMagic = function(ops)
 		var diff = (inst._windowWidth - iter)/2;
 		var origin = diff + (diff * scale);
 		origin = Math.round(((origin / inst._windowWidth) * 100)*100)/100;
+		
+		inst._gridActive = true;
 
-		inst._gridPanels.css({opacity:1,display:'block',cursor:'pointer'});
+		inst._gridPanels.css({display:'block',cursor:'pointer'});
 
 		// for FF, Safari
 		$jq('body').css({
 			MozTransformOrigin:origin+'% 50%',
 			MozTransform:'scale('+ scale +')',
-			webkitTransformOrigin:origin+'% 0%',	
-			webkitTransform:'scale('+scale+')'
-		});
+			WebkitTransformOrigin:origin+'% 0%',	
+			WebkitTransform:'scale('+scale+')'
+		}).attr({scrollTop:0,scrollLeft:0});
 		
 		// As always, something special for IE
 		if($jq.browser.msie)
@@ -489,10 +498,12 @@ $jq.panelMagic = function(ops)
 				var xadd = (parseFloat($jq(window).width()) - ((this.offsetWidth * scale) * inst._gridMatrix.cols))/2;
 				
 				$jq(this).css({left:cssleft + xadd,top:csstop});
-			});		
+			});	
+			
+			$jq(document.documentElement).attr({scrollTop:0,scrollLeft:0});	
 		}
 
-		inst._gridActive = true;
+		
 		inst._windowResized = false;
 
 	};
@@ -524,8 +535,8 @@ $jq.panelMagic = function(ops)
 			inst._gridPanels.fadeOut('fast',function(){
 				if(cnt == inst._gridPanels.length -1)
 				{
+
 					inst.drawGridLayout.call(inst);	
-					inst._gridActive = true;      	      
 					inst._gridPanels.fadeIn('fast',function(){
 						inst.options.afterLoadGrid.call(inst);
 					});	   
