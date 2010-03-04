@@ -41,6 +41,7 @@ $jq.panelMagic = function(ops)
 			panelClass:'panel',
 			panelPreviews:true,
 			panelPreviewScale: 1.5,
+			previewPause:150,
 			gridLoader:null,
 			gridLoaderOpacity:1,
 			gridLoaderOffset:{top:10,right:10,bottom:'none',left:'none'},
@@ -64,6 +65,8 @@ $jq.panelMagic = function(ops)
 		this.gridMatrix = this.calcMatrix.call(this);
 		this.firstLoad = true;
 		this.currentPanel = null;
+		this.oldScrollTop = 0;
+		this.oldScrollLeft = 0;
 		this.setup.call(this);		
 	};
 
@@ -208,7 +211,9 @@ $jq.panelMagic = function(ops)
 									scrollLeft:0 // must have this
 								});
 
-								$jq('body').scrollTo($panel, 500);	
+								$jq('body').scrollTo($panel, 500, {easing:$inst.options.scrollEasing, onAfter:function(){
+									// maybe do something?
+								}});	
 								
 								// don't forget our menu loader
 								$inst.repositionMenuLoader.call($inst);
@@ -226,38 +231,40 @@ $jq.panelMagic = function(ops)
 	this.showPanelPreview = function(event)
 	{
 		var $inst = event.data.inst;
+		$inst.hidePanelPreviews.call($inst);
 		
 		if ($inst.gridActive )
-		{
-			$inst.hidePanelPreviews.call($inst);
+		{					
+			var transform = $jq('body').css('MozTransform') || $jq('body').css('WebkitTransform');
+			var ratio = parseFloat(transform.match(/\d\.?\d+/)[0]);
+			var panel = this;				
 			
-			if(!this.panelPreview)
-			{
-				var $panel = $jq(this);
-				var $clone = $jq(this).clone(true);
-				var clone = $clone.get(0);
+			setTimeout(function(){
 				
+				$inst.hidePanelPreviews.call($inst);
+			
+				var $panel = $jq(panel);
+				var $clone = $jq(panel).clone(true);
+				var clone = $clone.get(0);
+			
 				var upscale = $inst.options.panelPreviewScale;
-				try{
-					var ratio = parseFloat($jq('body').css('MozTransform').match(/\d\.?\d+/)[0]) || parseFloat($jq('body').css('WebkitTransform').match(/\d\.?\d+/)[0]);
-				}catch(e){
-					return;
-				}
 				var ww = parseFloat($jq(window).width()) * $inst.gridMatrix[0];
 				var wh = parseFloat($jq(window).height()) * $inst.gridMatrix[1];
-				var pw = parseFloat(this.offsetWidth) * ratio;
-				var ph = parseFloat(this.offsetHeight) * ratio;
+				var pw = parseFloat(panel.offsetWidth) * ratio;
+				var ph = parseFloat(panel.offsetHeight) * ratio;
 				var cw = pw * upscale;
 				var ch = ph * upscale;
-				
-				var nl = parseFloat(this.offsetLeft) - (cw - pw/2);				
+			
+				var nl = parseFloat(panel.offsetLeft) - (cw - pw/2);				
 				nl = nl < 0 ? 0 : nl;
 				nl = nl + cw >= ww ? ww - cw : nl;
-				
-				var nt = parseFloat(this.offsetTop) - (ch - ph/2);				
+			
+				var nt = parseFloat(panel.offsetTop) - (ch - ph/2);				
 				nt = nt < 0 ? 0 : nt;
-				nt = nt + ch >= wh ? wh - ch : nt;
+				nt = nt + ch >= wh ? wh - ch : nt;				
 				
+				clone.parentPanel = panel;
+								
 				$clone
 					.css({
 						position:'absolute',
@@ -267,23 +274,22 @@ $jq.panelMagic = function(ops)
 						MozTransform:'scale('+upscale+')',
 						WebkitTransformOrigin:'0% 0%',
 						WebkitTransform:'scale('+upscale+')',
-						zIndex: parseInt($panel.css('zIndex')) + 1,
+						zIndex:10000,
 						display:'none'
 					})
 					.unbind('mouseover') // removes inherited event
 					.unbind('mousedown') // removes inherited event
 					.bind('mousedown',function(){ $jq(this.parentPanel).trigger('mousedown')});
-			
+		
+				panel.panelPreview = clone;
+		
 				$jq('body').append($clone);		
-				
+			
 				$clone.show();
 				
-				this.panelPreview = clone;
-				clone.parentPanel = this;
-			}
-		}		
+			}, $inst.options.previewPause);
+		}
 	}
-	
 	
 	this.hidePanelPreviews = function()
 	{
@@ -291,13 +297,15 @@ $jq.panelMagic = function(ops)
 		
 		if ($inst.gridActive )
 		{
-			$inst.gridPanels.each(function(){
-				if(this.panelPreview) 
+			for(i=0;i < $inst.gridPanels.length;i++)
+			{	
+				var panel = $inst.gridPanels[i];
+				if(panel.panelPreview) 
 				{
-					$jq(this.panelPreview).stop().remove();
-					this.panelPreview = null;
+					$jq(panel.panelPreview).stop().remove();
+					delete panel['panelPreview'];	
 				}
-			});
+			}
 		}			
 	}
 	
@@ -322,30 +330,33 @@ $jq.panelMagic = function(ops)
 	this.setPanelActive = function(event)
 	{
 		var $inst = event.data.inst;
+		var panel = event.target;
 				
 		if($inst.gridActive)
-		{			
-			$node = $jq(this);
+		{						
+			$node = $jq(panel);
+			$inst.gridActive = false;
 			
-			if(this.panelPreview) $jq(this.panelPreview).remove();
+			$inst.hidePanelPreviews.call($inst);
 			
-			$inst.currentPanel = $jq(this);
-			$inst.hideGridLayout.call($inst);
-			
+			if(panel.panelPreview) $jq(panel.panelPreview).remove();
+			$inst.hideGridLayout.call($inst, panel);
+	
 			event.stopPropagation();
 			event.preventDefault();
 			return false;		
 		}		
 	}
 
+
 	// bring us back to our regular display
-	this.hideGridLayout = function()
+	this.hideGridLayout = function(newPanel)
 	{
 		var $inst = this;  
 		var len = $inst.gridPanels.length;
 		var cnt = 0;
 		
-		$inst.hidePanelPreviews.call($inst);
+		$inst.hidePanelPreviews.call($inst);		
 		
 		$inst.gridPanels.fadeOut('fast',function(){
 			cnt++;
@@ -357,9 +368,6 @@ $jq.panelMagic = function(ops)
 					MozTransform:'scale(1)',
 					WebkitTransformOrigin:'0% 0%',
 					WebkitTransform:'scale(1)'
-				}).attr({
-					scrollTop:0, // must have this
-					scrollLeft:0 // must have this
 				});
 				
 				if($jq.browser.msie)
@@ -372,16 +380,21 @@ $jq.panelMagic = function(ops)
 				}
 
 				$inst.options.beforeRestorePanels.call($inst);	
-				
+								
 				var xcnt = 0;
 				$inst.gridPanels.css({cursor:'auto'}).fadeIn('fast',function(){
 					xcnt++;
 					if(xcnt == len)
 					{
 						$inst.gridActive = false;
-						$inst.options.afterRestorePanels.call($inst);
-						$jq.scrollTo('#'+$inst.currentPanel.attr('id'), $inst.options.scrollTimer, {easing:$inst.options.scrollEasing, onAfter:function(){
+						$jq.scrollTo($inst.currentPanel,0); // restore to last known panel
+										
+						$inst.currentPanel = newPanel; // reset current panel
+						
+						// now scroll to our current panel
+						$jq.scrollTo($inst.currentPanel, $inst.options.scrollTimer, {easing:$inst.options.scrollEasing, onAfter:function(){
 							$inst.repositionMenuLoader.call($inst);
+							$inst.options.afterRestorePanels.call($inst); // random callback		
 						}});	
 					}
 				});				
@@ -389,6 +402,7 @@ $jq.panelMagic = function(ops)
 		});
 	};
 	
+
 	this.repositionMenuLoader = function()
 	{
 		var $inst = this;
@@ -432,13 +446,16 @@ $jq.panelMagic = function(ops)
 	{
 		var $panel = $jq(panel);
 		var $inst = this;
-		$inst.currentPanel = $inst.findPanel($panel);
+		$panel = $inst.findPanel($panel);
+		
+		$inst.currentPanel = $panel;
 		
 		if($panel.is(('.'+$inst.options.panelClass)))
 		{			
 			$inst.scrollTo($panel, $inst.options.scrollTimer,{easing:$inst.options.scrollEasing,onAfter:function(){
 				$inst.repositionMenuLoader.call($inst);
 				$inst.options.afterLoadPanel.call($inst, $panel.get(0));
+				
 			}});
 		}
 		else
@@ -468,10 +485,7 @@ $jq.panelMagic = function(ops)
 			MozTransform:'scale('+ scale +')',
 			webkitTransformOrigin:origin+'% 0%',	
 			webkitTransform:'scale('+scale+')'
-		}).attr({
-			scrollTop:0, // must have this
-			scrollLeft:0 // must have this
-		});	  
+		});
 		
 		// As always, something special for IE
 		if($jq.browser.msie)
