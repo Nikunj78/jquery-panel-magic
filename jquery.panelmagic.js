@@ -32,8 +32,9 @@ $jq.panelMagic = function(ops)
 	// initializer
 	this.init = function(ops)
 	{
-		$jq('body').css({overflow:'hidden',overflowX:'hidden',overflowY:'hidden'});
+		$jq('body').css({padding:0,margin:0,overflow:'hidden',overflowX:'hidden',overflowY:'hidden'});
 		
+		// our options that users can configure
 		this.options = {
 			openingPanel:null,
 			scrollTimer:1500,
@@ -41,11 +42,13 @@ $jq.panelMagic = function(ops)
 			panelClass:'panel',
 			panelPreviews:true,
 			panelPreviewScale: 1.5,
+			panelURLParam: 'panel',
+			gridURLParam:'grid',
 			previewPause:150,
 			gridLoader:null,
 			gridLoaderOpacity:1,
 			gridLoaderOffset:{top:10,right:10,bottom:'none',left:'none'},
-			resizeTimer:500, // pause before running resize event
+			resizeTimer:1000, // pause before running resize event
 			beforeRestorePanels:function(){},
 			afterRestorePanels:function(){},
 			afterLoadGrid:function(){},
@@ -55,50 +58,33 @@ $jq.panelMagic = function(ops)
 		$jq.extend(this.options,ops);
 		
 		// object private properties
-		this.resizeTimer = null;
-		this.windowWidth = $jq(window).width();
-		this.windowOldHeight = 0;
-		this.windowOldWidth = 0;		
-		this.windowResized = false;
-		this.gridActive = false;
-		this.gridPanels = $jq(('.'+this.options.panelClass));
-		this.gridMatrix = this.calcMatrix.call(this);
-		this.firstLoad = true;
-		this.currentPanel = null;
-		this.oldScrollTop = 0;
-		this.oldScrollLeft = 0;
+		this._resizeTimer = null;
+		this._windowWidth = parseFloat($jq(window).width());
+		this._windowHeight = parseFloat($jq(window).height());
+		this._windowResized = false;
+		this._gridActive = false;
+		this._gridPanels = $jq(('.'+this.options.panelClass));
+		this._gridMatrix = this.calcMatrix.call(this);
+		this._currentPanel = null;
+		this._previewTimer = null;
+		
+		// set this thing up!
 		this.setup.call(this);		
 	};
 
 	// matrix calculations
 	this.calcMatrix = function()
 	{
-		for(i=1;i<=this.gridPanels.length;i++)
+		for(i=1;i<=this._gridPanels.length;i++)
 		{		
 			var sq = Math.pow(i,2);
-			if(sq == this.gridPanels.length)
+			switch(true)
 			{
-				return [i,i];
+				case (sq == this._gridPanels.length) : return {cols:i, rows:i}; 
+				case (sq > this._gridPanels.length) : return {cols:i, row:i--}; 
 			}
-			else if(sq > this.gridPanels.length)
-			{
-				return [i, i--];
-			} 
 		}			
 	};
-	
-	this.initGridLoader = function()
-	{
-		var $inst = this;
-		
-		if($inst.options.gridLoader)
-		{
-			var $ldr = $jq($inst.options.gridLoader);
-			$ldr.css({display:'none',position:'absolute'}).bind('click', function(){ 
-				$jq(this).fadeOut('fast'); $inst.showGrid.call($inst,$inst)
-			}, false);
-		}
-	}
 
 	// retrieve paddings and borders to substract from our abs positioned elements
 	this.getPanelOffsets = function()
@@ -118,47 +104,39 @@ $jq.panelMagic = function(ops)
 
 	this.positionPanels = function(callback)
 	{
-		var $inst = this;
-		$inst.sw = parseInt($jq(window).width()), $inst.sh = parseInt($jq(window).height());
-		var rows = $inst.gridMatrix[0];
-		var cols = $inst.gridMatrix[1];
+		var inst = this;
+		var rows = inst._gridMatrix.cols;
+		var cols = inst._gridMatrix.rows;
 		var idx = 0;
 
 		// establish rows
 		for(r=1;r<=rows;r++)
 		{				
-			var top = (r-1) * $inst.sh;
+			var top = (r-1) * inst._windowHeight;
 
 			// establish columns
 			for(c=1;c<=cols;c++)
 			{
-				var left = (c-1) * $inst.sw;
-				var $panel = $jq($inst.gridPanels[idx]);
+				var left = (c-1) * inst._windowWidth;
+				var $panel = $jq(inst._gridPanels[idx]);
 
 				if($panel.length == 0) break;
 
 				// remove our borders and padding from width
-				var off = $inst.getPanelOffsets.call($panel);
-				var width = $inst.sw - off.left - off.right;
-				var height = $inst.sh - off.top - off.bottom;
-				var $panel = $jq($inst.gridPanels[idx]).css({width:width,height:height,display:'none',position:'absolute'});	
+				var off = inst.getPanelOffsets.call($panel);
+				var width = inst._windowWidth - off.left - off.right;
+				var height = inst._windowHeight - off.top - off.bottom;
+				var $panel = $jq(inst._gridPanels[idx]).css({width:width,height:height,visibility:'hidden',display:'block',position:'absolute'});	
 				$panel.get(0).defaultTop = top;
 				$panel.get(0).defaultLeft = left;
-				idx++;
+				idx++;				
+					
+				$panel.css({top:top,left:left});
 				
-				// pass idx into anonymous function as we need a new scope
-				// otherwise idx is always the max value
-				(function(idx){
-					$panel.animate({top:top,left:left},100, function(){
-						if(idx == $inst.gridPanels.length)
-						{
-							$inst.windowOldWidth = width;
-							$inst.windowOldHeight = height;
-							
-							if(callback) callback.call($inst);
-						}
-					});	
-				})(idx);			
+				if(idx == inst._gridPanels.length)
+				{
+					if(callback) callback.call(inst);
+				}			
 			}				
 		}		
 	}
@@ -166,95 +144,97 @@ $jq.panelMagic = function(ops)
 	// set panels in matrix
 	this.setup = function()
 	{			
-		var $inst = this;		
-		$inst.positionPanels.call($inst ,function(){
+		var inst = this;		
+		
+		// init grid loader
+		if(inst.options.gridLoader)
+		{
+			var $ldr = $jq(inst.options.gridLoader);
+			$ldr.css({display:'none',position:'absolute'}).bind('click', function(){ 
+				$jq(this).fadeOut('fast'); inst.showGrid.call(inst,inst)
+			}, false);
+		}
+		
+		inst.positionPanels.call(inst ,function(){
 
 			// set opening panel
-			$inst.currentPanel = $inst.options.openingPanel ? $jq($inst.options.openingPanel) : $inst.gridPanels[0];
+			inst._currentPanel = inst.options.openingPanel ? $jq(inst.options.openingPanel) : inst._gridPanels[0];
 			
 			// bind events
-			$inst.gridPanels.css({display:'block'}).bind('mousedown', {inst:$inst}, this.setPanelActive );
+			inst._gridPanels.css({display:'block',visibility:'visible'}).bind('mousedown', {inst:inst}, this.setPanelActive );
 				
 			// check if they want a preview
-			if($inst.options.panelPreviews) $inst.gridPanels.bind('mouseover', {inst:$inst}, this.showPanelPreview );
+			if(inst.options.panelPreviews) inst._gridPanels.bind('mouseover', {inst:inst}, this.showPanelPreview );
 		
-			// go to opening panel
-			$jq.scrollTo($inst.currentPanel,$inst.options.scrollTimer,{easing:$inst.options.scrollEasing,onAfter:function(){
-
-				// reposition our menuloader after panel is selected
-				$inst.repositionMenuLoader.call($inst);
+			// bind a resize event to the window to handle redraw
+			$jq(window).bind('resize', function(){ 
+				inst._windowResized = true; 
+				inst._windowWidth = $jq(window).width();
 				
-				// bind a resize event to the window to handle redraw
-				$jq(window).bind('resize', function(){ 
-					$inst.windowResized = true; 
-					$inst.windowWidth = $jq(window).width();
-					
-					// we have a custom resize to stop flickering
-					// upon complete, executes the function called to it					
-					$inst.resizeWait(function(){
-						var $inst = this;
-						
-						// when gridActive, fix scale of panel grid
-						if($inst.gridActive) 
-						{ 
-								$inst.redrawGridLayout.call($inst);
-						}
-						else
-						{
-							// not gridActive, reposition panels
-							$inst.positionPanels.call($inst,function(){
-								$inst.gridPanels.show();
-								$panel = $jq($inst.currentPanel);
-							
-								$jq('body').attr({
-									scrollTop:0, // must have this
-									scrollLeft:0 // must have this
-								});
-
-								$jq('body').scrollTo($panel, 500, {easing:$inst.options.scrollEasing, onAfter:function(){
-									// maybe do something?
-								}});	
-								
-								// don't forget our menu loader
-								$inst.repositionMenuLoader.call($inst);
-																				
-							}); 
-						} 
-					});
+				// we have a custom resize to stop flickering
+				// upon complete, executes the function called to it					
+				inst.resizeWait(function(){
+					window.location.reload();
 				});
-			}});	
+			});		
+			
+			// show grid if url matches
+			var re = new RegExp(inst.options.gridURLParam + '=true');
+			if(window.location.href.match(re))
+			{
+				inst.showGrid.call(inst,inst);
+			}
+			else
+			{	
+				var re = new RegExp(inst.options.panelURLParam + '=(.*)');
+				if(window.location.href.match(re))
+				{
+					inst._currentPanel = $jq('#' + window.location.href.match(re)[1]);
+				}				
+				// go to opening panel
+				$jq.scrollTo(inst._currentPanel,inst.options.scrollTimer,{easing:inst.options.scrollEasing, onAfter:function(){
+					// reposition our menuloader after panel is selected
+					inst.repositionMenuLoader.call(inst);
+				}});	
+			}
 		});
-		
-		$inst.initGridLoader();
 	};
 	
 	this.showPanelPreview = function(event)
 	{
-		var $inst = event.data.inst;
-		$inst.hidePanelPreviews.call($inst);
+		var inst = event.data.inst;
 		
-		if ($inst.gridActive )
+		// hide panel previews
+		inst.hidePanelPreviews.call(inst);
+		
+		if (inst._gridActive )
 		{					
+			// our current calculated transform levels
 			var transform = $jq('body').css('MozTransform') || $jq('body').css('WebkitTransform');
 			var ratio = parseFloat(transform.match(/\d\.?\d+/)[0]);
 			var panel = this;				
 			
-			setTimeout(function(){
+			// clear preview timer
+			clearTimeout(inst._previewTimer);
+			
+			// create our preview for the grid layout
+			inst._previewTimer = setTimeout(function(){
 				
-				$inst.hidePanelPreviews.call($inst);
+				// make sure they are still hidden since we are in a timer
+				inst.hidePanelPreviews.call(inst);
 			
 				var $panel = $jq(panel);
 				var $clone = $jq(panel).clone(true);
-				var clone = $clone.get(0);
-			
-				var upscale = $inst.options.panelPreviewScale;
-				var ww = parseFloat($jq(window).width()) * $inst.gridMatrix[0];
-				var wh = parseFloat($jq(window).height()) * $inst.gridMatrix[1];
-				var pw = parseFloat(panel.offsetWidth) * ratio;
+				var clone = $clone.get(0);			
+				var upscale = inst.options.panelPreviewScale;
+				var ww = inst._windowWidth * inst._gridMatrix.cols; // total stage width with all panels
+				var wh = inst._windowHeight * inst._gridMatrix.rows; // total stage height with all panels
+				var pw = parseFloat(panel.offsetWidth) * ratio; 
 				var ph = parseFloat(panel.offsetHeight) * ratio;
 				var cw = pw * upscale;
 				var ch = ph * upscale;
 			
+				// do our best to keep previews within the window
 				var nl = parseFloat(panel.offsetLeft) - (cw - pw/2);				
 				nl = nl < 0 ? 0 : nl;
 				nl = nl + cw >= ww ? ww - cw : nl;
@@ -263,10 +243,11 @@ $jq.panelMagic = function(ops)
 				nt = nt < 0 ? 0 : nt;
 				nt = nt + ch >= wh ? wh - ch : nt;				
 				
-				clone.parentPanel = panel;
+				clone.parentPanel = panel; // store a reference to the main panel
 								
+				// give our clone some new styles
 				$clone
-					.css({
+					.css({ 
 						position:'absolute',
 						left: nl,
 						top: nt,
@@ -281,25 +262,25 @@ $jq.panelMagic = function(ops)
 					.unbind('mousedown') // removes inherited event
 					.bind('mousedown',function(){ $jq(this.parentPanel).trigger('mousedown')});
 		
-				panel.panelPreview = clone;
+				panel.panelPreview = clone; // store a refernece to the clone with the panel
 		
 				$jq('body').append($clone);		
 			
-				$clone.show();
+				$clone.fadeIn('fast');
 				
-			}, $inst.options.previewPause);
+			}, inst.options.previewPause);
 		}
 	}
 	
 	this.hidePanelPreviews = function()
 	{
-		var $inst = this;
+		var inst = this;
 		
-		if ($inst.gridActive )
+		if (inst._gridActive )
 		{
-			for(i=0;i < $inst.gridPanels.length;i++)
+			for(i=0;i < inst._gridPanels.length;i++)
 			{	
-				var panel = $inst.gridPanels[i];
+				var panel = inst._gridPanels[i];
 				if(panel.panelPreview) 
 				{
 					$jq(panel.panelPreview).stop().remove();
@@ -311,36 +292,39 @@ $jq.panelMagic = function(ops)
 	
 	this.resizeWait = function(callback)
 	{	
-		var $inst = this;
+		var inst = this;
 		
-		if($inst.resizeTimer == null)
+		if(inst._resizeTimer == null)
 		{
-			$inst.resizeTimer = setInterval(function(){				
-				if($jq(window).width() == $inst.windowWidth)
+			inst._resizeTimer = setInterval(function(){				
+				if($jq(window).width() == inst._windowWidth)
 				{
-					clearInterval($inst.resizeTimer);
-					callback.call($inst);
-					$inst.resizeTimer = null;
-					$inst.windowWidth = $jq(window).width();
+					clearInterval(inst._resizeTimer);
+					callback.call(inst);
+					inst._resizeTimer = null;
+					inst._windowWidth = $jq(window).width();
 				}
-			}, $inst.options.resizeTimer);
+			}, inst.options.resizeTimer);
 		}		
 	}
 	
 	this.setPanelActive = function(event)
 	{
-		var $inst = event.data.inst;
+		var inst = event.data.inst;
 		var panel = event.target;
 				
-		if($inst.gridActive)
+		if(inst._gridActive)
 		{						
 			$node = $jq(panel);
-			$inst.gridActive = false;
+			inst._gridActive = false;
 			
-			$inst.hidePanelPreviews.call($inst);
+			inst.hidePanelPreviews.call(inst);
 			
 			if(panel.panelPreview) $jq(panel.panelPreview).remove();
-			$inst.hideGridLayout.call($inst, panel);
+			inst.hideGridLayout.call(inst, panel);
+			
+			var loc = String(window.location);
+			window.location = loc.substr(0,loc.indexOf('#')) + '#/'+inst.options.panelURLParam+'=' + $jq(panel).attr('id');
 	
 			event.stopPropagation();
 			event.preventDefault();
@@ -352,13 +336,13 @@ $jq.panelMagic = function(ops)
 	// bring us back to our regular display
 	this.hideGridLayout = function(newPanel)
 	{
-		var $inst = this;  
-		var len = $inst.gridPanels.length;
+		var inst = this;  
+		var len = inst._gridPanels.length;
 		var cnt = 0;
 		
-		$inst.hidePanelPreviews.call($inst);		
+		inst.hidePanelPreviews.call(inst);		
 		
-		$inst.gridPanels.fadeOut('fast',function(){
+		inst._gridPanels.fadeOut('fast',function(){
 			cnt++;
 
 			if(cnt == len)
@@ -379,22 +363,22 @@ $jq.panelMagic = function(ops)
 					});		
 				}
 
-				$inst.options.beforeRestorePanels.call($inst);	
+				inst.options.beforeRestorePanels.call(inst);	
 								
 				var xcnt = 0;
-				$inst.gridPanels.css({cursor:'auto'}).fadeIn('fast',function(){
+				inst._gridPanels.css({cursor:'auto'}).fadeIn('fast',function(){
 					xcnt++;
 					if(xcnt == len)
 					{
-						$inst.gridActive = false;
-						$jq.scrollTo($inst.currentPanel,0); // restore to last known panel
+						inst._gridActive = false;
+						$jq.scrollTo(inst._currentPanel,0); // restore to last known panel
 										
-						$inst.currentPanel = newPanel; // reset current panel
+						inst._currentPanel = newPanel; // reset current panel
 						
 						// now scroll to our current panel
-						$jq.scrollTo($inst.currentPanel, $inst.options.scrollTimer, {easing:$inst.options.scrollEasing, onAfter:function(){
-							$inst.repositionMenuLoader.call($inst);
-							$inst.options.afterRestorePanels.call($inst); // random callback		
+						$jq.scrollTo(inst._currentPanel, inst.options.scrollTimer, {easing:inst.options.scrollEasing, onAfter:function(){
+							inst.repositionMenuLoader.call(inst);
+							inst.options.afterRestorePanels.call(inst); // random callback		
 						}});	
 					}
 				});				
@@ -405,19 +389,19 @@ $jq.panelMagic = function(ops)
 
 	this.repositionMenuLoader = function()
 	{
-		var $inst = this;
+		var inst = this;
 		
-		if($inst.options.gridLoader)
+		if(inst.options.gridLoader)
 		{
-			var $el = $jq($inst.currentPanel);
-			var $cnt = $jq($inst.options.gridLoader);
+			var $el = $jq(inst._currentPanel);
+			var $cnt = $jq(inst.options.gridLoader);
 			var sl = $el.get(0).offsetLeft, st = $el.get(0).offsetTop, sw = $jq(window).width(), sh = $jq(window).height();
 			var cw = $cnt.width(), ch = $cnt.height();
 			var offsets = {};
 			
-			if($inst.options.gridLoaderOffset)
+			if(inst.options.gridLoaderOffset)
 			{
-				var o = $inst.options.gridLoaderOffset;
+				var o = inst.options.gridLoaderOffset;
 				
 				if (o.left && String(o.left).match(/none|auto/)) offsets.left = 'auto'; 				
 				if (o.left && !isNaN(o.left)) offsets.left = sl + o.left;	
@@ -433,7 +417,7 @@ $jq.panelMagic = function(ops)
 			}						
 			
 			$cnt.css({
-				opacity:$inst.options.gridLoaderOpacity,
+				opacity:inst.options.gridLoaderOpacity,
 				top: offsets.top,
 				left: offsets.left
 			}).fadeIn();
@@ -445,16 +429,19 @@ $jq.panelMagic = function(ops)
 	this.loadPanel = function(panel)
 	{
 		var $panel = $jq(panel);
-		var $inst = this;
-		$panel = $inst.findPanel($panel);
+		var inst = this;
+		$panel = inst.findPanel($panel);
 		
-		$inst.currentPanel = $panel;
+		inst._currentPanel = $panel;
 		
-		if($panel.is(('.'+$inst.options.panelClass)))
+		if($panel.is(('.'+inst.options.panelClass)))
 		{			
-			$inst.scrollTo($panel, $inst.options.scrollTimer,{easing:$inst.options.scrollEasing,onAfter:function(){
-				$inst.repositionMenuLoader.call($inst);
-				$inst.options.afterLoadPanel.call($inst, $panel.get(0));
+			var loc = String(window.location);
+			window.location = loc.substr(0,loc.indexOf('#')) + '#/'+inst.options.panelURLParam+'=' + $panel.attr('id');
+			
+			inst.scrollTo($panel, inst.options.scrollTimer,{easing:inst.options.scrollEasing,onAfter:function(){
+				inst.repositionMenuLoader.call(inst);
+				inst.options.afterLoadPanel.call(inst, $panel.get(0));
 				
 			}});
 		}
@@ -465,19 +452,17 @@ $jq.panelMagic = function(ops)
 	};
 
 	//  scales the interface and redraws all pages on screen
-	this.redrawGridLayout = function()
+	this.drawGridLayout = function()
 	{  
-		var $inst = this;
+		var inst = this;
 
-		var wh = parseInt($jq(window).height());
-		var ww = parseInt($jq(window).width());
-		var scale = (wh/($inst.gridMatrix[0] * $inst.sh));
-		var iter = $inst.gridMatrix[1] * ($inst.sw * scale);
-		var diff = (ww - iter)/2;
+		var scale = (inst._windowHeight/(inst._gridMatrix.cols * inst._windowHeight));
+		var iter = inst._gridMatrix.rows * (inst._windowWidth * scale);
+		var diff = (inst._windowWidth - iter)/2;
 		var origin = diff + (diff * scale);
-		origin = Math.round(((origin / ww) * 100)*100)/100;
+		origin = Math.round(((origin / inst._windowWidth) * 100)*100)/100;
 
-		$inst.gridPanels.css({opacity:1,display:'block',cursor:'pointer'});
+		inst._gridPanels.css({opacity:1,display:'block',cursor:'pointer'});
 
 		// for FF, Safari
 		$jq('body').css({
@@ -501,23 +486,23 @@ $jq.panelMagic = function(ops)
 				
 				// get the difference of the resized window according to the new
 				// sizes of the elements and add to left position - keeps them centered
-				var xadd = (parseFloat($jq(window).width()) - ((this.offsetWidth * scale) * $inst.gridMatrix[0]))/2;
+				var xadd = (parseFloat($jq(window).width()) - ((this.offsetWidth * scale) * inst._gridMatrix.cols))/2;
 				
 				$jq(this).css({left:cssleft + xadd,top:csstop});
 			});		
 		}
 
-		$inst.gridActive = true;
-		$inst.windowResized = false;
+		inst._gridActive = true;
+		inst._windowResized = false;
 
 	};
 
 	// traverse the dom and find the panel
 	this.findPanel = function(element)
 	{
-		var $inst = this;
+		var inst = this;
 		var el = $jq(element);
-		while(!el.is(('.'+$inst.options.panelClass)))
+		while(!el.is(('.'+inst.options.panelClass)))
 		{
 			el = el.parent();
 		}
@@ -527,40 +512,27 @@ $jq.panelMagic = function(ops)
 	// show the overview for the site
 	this.showGrid = function(inst)
 	{
-		var $inst = inst;
-		//$inst.currentPanel = $inst.findPanel(caller);
+		var inst = inst;
+		var loc = String(window.location);
+		window.location = loc.substr(0,loc.indexOf('#')) + '#/'+inst.options.gridURLParam+'=true';
+		//inst._currentPanel = inst.findPanel(caller);
 
-		if(!$inst.gridActive)
+		if(!inst._gridActive)
 		{
-			if($inst.firstLoad && $inst.options.showGridOnload)
-			{
-				$inst.redrawGridLayout.call($inst);	
-				$inst.gridActive = true;      	      
-				$inst.gridPanels.fadeIn('fast');	
-				$inst.firstLoad = false;
-				$inst.options.afterLoadGrid.call($inst);	
-			}
-			else
-			{
-				var cnt = 0;				
-					
-				$inst.gridPanels.fadeOut('fast',function(){
-					if(cnt == $inst.gridPanels.length -1)
-					{
-						$inst.redrawGridLayout.call($inst);	
-						$inst.gridActive = true;      	      
-						$inst.gridPanels.fadeIn('fast',function(){
-							$inst.options.afterLoadGrid.call($inst);
-						});	   
-					}
-					cnt++;
-				});
-			}
-		}
-		else
-		{
-			$inst.hideGridLayout.call($inst);
-		}
+			var cnt = 0;				
+				
+			inst._gridPanels.fadeOut('fast',function(){
+				if(cnt == inst._gridPanels.length -1)
+				{
+					inst.drawGridLayout.call(inst);	
+					inst._gridActive = true;      	      
+					inst._gridPanels.fadeIn('fast',function(){
+						inst.options.afterLoadGrid.call(inst);
+					});	   
+				}
+				cnt++;
+			});			
+		}		
 	};
 
 	// initialize
