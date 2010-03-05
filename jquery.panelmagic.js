@@ -2,9 +2,9 @@
  * jQuery.panelmagic.js
  * Copyright (c) 2010 Craig Hoover - crh3675(at)gmail(dot)com | http://standardscompliance.com
  * Dual licensed under MIT and GPL.
- * Date: 3/3/2010
+ * Date: 3/5/2010
  * @author Craig Hoover
- * @version 0.1.r8
+ * @version 0.1.r10
  * 
  * http://code.google.com/p/jquery-panel-magic/
  */
