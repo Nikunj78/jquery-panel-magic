@@ -4,7 +4,7 @@
  * Dual licensed under MIT and GPL.
  * Date: 3/5/2010
  * @author Craig Hoover
- * @version 0.1.r10
+ * @version 1.0
  * 
  * http://code.google.com/p/jquery-panel-magic/
  */
