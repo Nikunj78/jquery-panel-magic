@@ -68,6 +68,7 @@ $jq.panelMagic = function(ops)
 		this._gridMatrix = this.calcMatrix.call(this);
 		this._currentPanel = null;
 		this._previewTimer = null;
+		this._matrixScale = 1;
 		
 		// set this thing up!
 		this.setup.call(this);		
@@ -128,11 +129,15 @@ $jq.panelMagic = function(ops)
 				var width = inst._windowWidth - off.left - off.right;
 				var height = inst._windowHeight - off.top - off.bottom;
 				var $panel = $jq(inst._gridPanels[idx]).css({width:width,height:height,display:'block',position:'absolute'});	
-				$panel.get(0).defaultTop = top;
-				$panel.get(0).defaultLeft = left;
+				panel = $panel.get(0);
+				panel.defaultTop = top;
+				panel.defaultLeft = left;
 				idx++;				
 					
 				$panel.css({top:top,left:left});
+				
+				panel.oldOffsetTop = panel.offsetTop;
+				panel.oldOffsetLeft = panel.offsetLeft;				
 				
 				if(idx == inst._gridPanels.length)
 				{
@@ -156,6 +161,17 @@ $jq.panelMagic = function(ops)
 			}, false);
 		}
 		
+		// bind a resize event to the window to handle redraw			
+		$jq(window).bind('resize', function(){ 
+			window.clearTimeout(inst._resizeTimer);
+			inst._resizeTimer = window.setTimeout(function(){
+				if(inst._windowWidth != parseInt($jq(window).width()) && inst._windowHeight != parseInt($jq(window).height()))
+				{
+					window.location.reload();					
+				}
+			}, inst.options.resizeTimer);
+		});
+		
 		inst.positionPanels.call(inst ,function(){
 
 			// set opening panel
@@ -166,18 +182,6 @@ $jq.panelMagic = function(ops)
 				
 			// check if they want a preview
 			if(inst.options.panelPreviews) inst._gridPanels.bind('mouseover', {inst:inst}, this.showPanelPreview );
-		
-			// bind a resize event to the window to handle redraw			
-			$jq(window).bind('resize', function(){ 
-				window.clearTimeout(inst._resizeTimer);
-				inst._resizeTimer = window.setTimeout(function(){
-					if(inst._windowWidth != parseInt($jq(window).width()) && inst._windowHeight != parseInt($jq(window).height()))
-					{
-						window.location.reload();					
-					}
-				}, inst.options.resizeTimer);
-			});
-					
 			
 			// show grid if url matches
 			var re = new RegExp(inst.options.gridURLParam + '=true');
@@ -205,8 +209,6 @@ $jq.panelMagic = function(ops)
 	{
 		var inst = event.data.inst;
 		
-		if ($jq.browser.msie) return;
-		
 		// hide panel previews
 		inst.hidePanelPreviews.call(inst);
 		
@@ -232,19 +234,15 @@ $jq.panelMagic = function(ops)
 				var upscale = inst.options.panelPreviewScale;
 				var ww = inst._windowWidth * inst._gridMatrix.cols; // total stage width with all panels
 				var wh = inst._windowHeight * inst._gridMatrix.rows; // total stage height with all panels
-				var pw = parseFloat(panel.offsetWidth) * ratio; 
-				var ph = parseFloat(panel.offsetHeight) * ratio;
-				var cw = pw * upscale;
-				var ch = ph * upscale;
+				var pw = parseFloat(panel.offsetWidth), pwr = pw * ratio, cw = pwr * upscale;
+				var ph = parseFloat(panel.offsetHeight), phr = ph * ratio, ch = phr * upscale;
 			
 				// do our best to keep previews within the window
-				var nl = parseFloat(panel.offsetLeft) - (cw - pw/2);				
-				nl = nl < 0 ? 0 : nl;
-				nl = nl + cw >= ww ? ww - cw : nl;
-			
-				var nt = parseFloat(panel.offsetTop) - (ch - ph/2);				
-				nt = nt < 0 ? 0 : nt;
-				nt = nt + ch >= wh ? wh - ch : nt;				
+				var nl = parseFloat(panel.oldOffsetLeft) - (cw - pwr/2);		
+				nl = nl < 0 ? 0 : nl; nl = nl + cw >= ww ? ww - cw : nl;
+
+				var nt = parseFloat(panel.oldOffsetTop) - (ch - phr/2);	
+				nt = nt < 0 ? 0 : nt; nt = nt + ch >= wh ? wh - ch : nt;				
 				
 				clone.parentPanel = panel; // store a reference to the main panel
 								
@@ -268,8 +266,26 @@ $jq.panelMagic = function(ops)
 				panel.panelPreview = clone; // store a refernece to the clone with the panel
 		
 				$jq('body').append($clone);		
-			
-				$clone.fadeIn('fast');
+				
+				if($jq.browser.msie)
+				{
+					var nl = parseFloat(panel.oldOffsetLeft);
+					nl = nl * inst._matrixScale; nw = pw * inst._matrixScale; pw = nw * upscale;df = pw - nw; nl = nl - df/2;
+					
+					var nt = parseFloat(panel.oldOffsetTop);
+					nt = nt * inst._matrixScale; nh = ph * inst._matrixScale; ph = nh * upscale; df = ph - nh; nt = nt - df/2;
+					
+					nl = nl < 0 ? 0 : nl; nl = nl + nw > inst._windowWidth ? inst._windowWidth - nw : nl; nt = nt < 0 ? 0 : nt;
+					nt = nt + nh > inst._windowHeight ? inst._windowHeight - nh : nt;
+							
+					$clone.css({display:'block',left:nl,top:nt}).IEMatrixScale({scale:inst._matrixScale * upscale,expr:'*='});
+					$clone.fadeIn('fast');
+				}
+				else
+				{
+					$clone.fadeIn('fast');
+				}
+				
 				
 			}, inst.options.previewPause);
 		}
@@ -470,6 +486,7 @@ $jq.panelMagic = function(ops)
 		origin = Math.round(((origin / inst._windowWidth) * 100)*100)/100;
 		
 		inst._gridActive = true;
+		inst._matrixScale = scale;
 
 		inst._gridPanels.css({display:'block',cursor:'pointer'});
 
