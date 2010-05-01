@@ -10,9 +10,13 @@
 	<style type="text/css">
 	body{margin:0;padding:0;background:#FFF;color:#000;}
 	a{outline:none;color:#000;font-size:84px}
-	.panel{border:5px solid #FFF;background:#CCC;padding:10px}
-	.content {background:#777;width:100%;height:100%;margin:0 auto 0 auto}	
+	p{margin:8px 0}
 	
+	/* panel default styles */
+	.panel{border:5px solid #FFF;background:#CCC;padding-top:10px}	
+	.content {background:#FFF;border:5px solid #BFBFBF;padding:10px;width:930px;height:92%;overflow:auto;margin:0 auto 0 auto;}	
+	
+	/* styling for the "sitemap" button */
 	#overview{cursor:pointer;font:bold 1.2em/3em Arial,sans-serif;text-transform:uppercase;color:#FFF;-webkit-border-radius:5px;-moz-border-radius:5px;top:0;right:0;width:20em;height:3em;background:black;text-align:center}
 	
 	h1{color:#000;font:bold 64px/64px Arial,sans-serif;margin:8px 0;padding:0}
@@ -29,82 +33,119 @@
 <body>
 	<div id="home" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#orange');return false">orange</a>			
+			<a href="" onclick="$pm.loadPanel('#orange');return false">orange</a>		
+			<p>here is some additional content.</p>	
 		</div>
 	</div>
 	<div id="about" class="panel">
 		<div class="content">
 			<a href="" onclick="$pm.loadPanel('#purple');return false">purple</a>
+			<p>here is some additional content.</p>	
 		</div>
 	</div>
 	<div id="contact" class="panel">
 		<div class="content">
 			<a href="" onclick="$pm.loadPanel('#teal');return false">teal</a>
+			<p>here is some additional content.</p>	
 		</div>
 	</div>
 	<div id="company" class="panel">	
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>			
+			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<p>here is some additional content.</p>		
 		</div>
 	</div>
 	<div id="purple" class="panel">	
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#about');return false">about</a>		
+			<div class="layout">
+				<p>here is a fixed width layout inside the panels</p>
+			</div>	
 		</div>
 	</div>
 	<div id="orange" class="panel">			
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#contact');return false">contact</a>			
+			<a href="" onclick="$pm.loadPanel('#contact');return false">contact</a>	
+			<p>here is some additional content.</p>			
 		</div>
 	</div>
 	<div id="teal" class="panel">
 		<div class="content">
 			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<p>here is some additional content.</p>	
 		</div>
 	</div>	
 	<div id="extra1" class="panel">
 		<div class="content">
 			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<p>here is some additional content.</p>	
 		</div>
 	</div>
 	<div id="extra2" class="panel">
 		<div class="content">
 			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
+			<p>here is some additional content.</p>	
 		</div>
 	</div>
 	<div id="extra3" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>	
+			<p>here is some additional content.</p>		
 		</div>
 	</div>
 	<div id="extra4" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>	
+			<p>here is some additional content.</p>		
 		</div>
 	</div>
 	<div id="extra5" class="panel">
 		<div class="content">
 			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<p>here is some additional content.</p>	
 		</div>
 	</div>
 	<div id="extra6" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>	
+			<p>here is some additional content.</p>		
 		</div>
 	</div>
 	<div id="extra7" class="panel">
 		<div class="content">
 			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<p>here is some additional content.</p>	
 		</div>
 	</div>
 	<div id="extra8" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>	
+			<p>here is some additional content.</p>		
 		</div>
 	</div>
 	<div id="extra9" class="panel">
 		<div class="content">
 			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<p>Here is some additional content.</p>	
+			<p>You will see this content in the sitemap exactly the way it appears on the page!</p>
 		</div>
 	</div>
 	<div id="overview">
