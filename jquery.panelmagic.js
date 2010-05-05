@@ -95,11 +95,17 @@ $jq.panelMagic = function(ops)
 		var offsets = {top:0,right:0,bottom:0,left:0};
 
 		$jq(['border%sWidth','padding%s']).each(function(){
-			offsets.left 	+= parseInt($panel.css(this.replace('%s','Left')) || 0);
-			offsets.right 	+= parseInt($panel.css(this.replace('%s','Right')) || 0);
-			offsets.top 	+= parseInt($panel.css(this.replace('%s','Top')) || 0);
-			offsets.bottom += parseInt($panel.css(this.replace('%s','Bottom')) || 0);
+
+				offsets.left 	+= parseInt($panel.css(this.replace('%s','Left')) || 0);
+				offsets.right 	+= parseInt($panel.css(this.replace('%s','Right')) || 0);
+				offsets.top 	+= parseInt($panel.css(this.replace('%s','Top')) || 0);
+				offsets.bottom += parseInt($panel.css(this.replace('%s','Bottom')) || 0);
 		});
+
+		for(key in offsets)
+		{
+			offsets[key] = isNaN(offsets[key]) ? 0 : offsets[key];
+		}
 
 		return offsets;
 	};
@@ -128,11 +134,12 @@ $jq.panelMagic = function(ops)
 				var off = inst.getPanelOffsets.call($panel);
 				var width = inst._windowWidth - off.left - off.right;
 				var height = inst._windowHeight - off.top - off.bottom;
-				var $panel = $jq(inst._gridPanels[idx]).css({width:width,height:height,display:'block',position:'absolute'});	
+				var $panel = $jq(inst._gridPanels[idx]).css({width:width,height:height,display:'block',position:'absolute'});					
+				
 				panel = $panel.get(0);
 				panel.defaultTop = top;
 				panel.defaultLeft = left;
-				idx++;				
+				idx++;	
 					
 				$panel.css({top:top,left:left});
 				
