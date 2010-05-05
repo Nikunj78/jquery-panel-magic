@@ -248,6 +248,7 @@ $jq.panelMagic = function(ops)
 								
 				// give our clone some new styles
 				$clone
+					.addClass('panel-preview-clone')
 					.css({ 
 						position:'absolute',
 						left: nl,
@@ -293,20 +294,8 @@ $jq.panelMagic = function(ops)
 	
 	this.hidePanelPreviews = function()
 	{
-		var inst = this;
-		
-		if (inst._gridActive )
-		{
-			for(i=0;i < inst._gridPanels.length;i++)
-			{	
-				var panel = inst._gridPanels[i];
-				if(panel.panelPreview) 
-				{
-					$jq(panel.panelPreview).stop().remove();
-					panel.panelPreview = null;
-				}
-			}
-		}			
+		var inst = this;		
+		$jq('.panel-preview-clone').remove();		
 	}
 	
 	this.resizeWait = function(callback)
