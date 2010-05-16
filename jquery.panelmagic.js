@@ -32,6 +32,7 @@ $jq.panelMagic = function(ops)
 	// initializer
 	this.init = function(ops)
 	{
+
 		$jq('body').css({padding:0,margin:0,overflow:'hidden'});
 		if($jq.browser.msie) $jq(document.documentElement).css({overflow:'hidden'});
 		
@@ -80,10 +81,11 @@ $jq.panelMagic = function(ops)
 		for(i=1;i<=this._gridPanels.length;i++)
 		{		
 			var sq = Math.pow(i,2);
+
 			switch(true)
 			{
 				case (sq == this._gridPanels.length) : return {cols:i, rows:i}; 
-				case (sq > this._gridPanels.length) : return {cols:i, row:i--}; 
+				case (sq > this._gridPanels.length) : return {cols:i, rows:i--}; 
 			}
 		}			
 	};
@@ -127,14 +129,13 @@ $jq.panelMagic = function(ops)
 			{
 				var left = (c-1) * inst._windowWidth;
 				var $panel = $jq(inst._gridPanels[idx]);
-
 				if($panel.length == 0) break;
 
 				// remove our borders and padding from width
 				var off = inst.getPanelOffsets.call($panel);
 				var width = inst._windowWidth - off.left - off.right;
 				var height = inst._windowHeight - off.top - off.bottom;
-				var $panel = $jq(inst._gridPanels[idx]).css({width:width,height:height,display:'block',position:'absolute'});					
+				var $panel = $jq(inst._gridPanels[idx]).css({width:width,height:height,display:'block',position:'absolute'});	
 				
 				panel = $panel.get(0);
 				panel.defaultTop = top;
