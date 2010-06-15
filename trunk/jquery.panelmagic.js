@@ -96,12 +96,15 @@ $jq.panelMagic = function(ops)
 		$panel = $jq(this);
 		var offsets = {top:0,right:0,bottom:0,left:0};
 
-		$jq(['border%sWidth','padding%s']).each(function(){
-
-				offsets.left 	+= parseInt($panel.css(this.replace('%s','Left')) || 0);
-				offsets.right 	+= parseInt($panel.css(this.replace('%s','Right')) || 0);
-				offsets.top 	+= parseInt($panel.css(this.replace('%s','Top')) || 0);
-				offsets.bottom += parseInt($panel.css(this.replace('%s','Bottom')) || 0);
+		var str = 'padding%s';	
+		$jq(['Top','Left','Bottom','Right']).each(function(){
+			offsets[this.toLowerCase()] += parseInt($panel.css(str.replace('%s',this)) || 0);
+		});
+		
+		var str = 'border%sWidth';
+		var str2 = 'border%sStyle';
+		$jq(['Top','Left','Bottom','Right']).each(function(){
+			if($panel.css(str2.replace('%s', this)) != 'none') offsets[this.toLowerCase()] += parseInt($panel.css(str.replace('%s',this)) || 0);
 		});
 
 		for(key in offsets)
@@ -172,6 +175,8 @@ $jq.panelMagic = function(ops)
 		// bind a resize event to the window to handle redraw			
 		$jq(window).bind('resize', function(){ 
 			window.clearTimeout(inst._resizeTimer);
+
+			
 			inst._resizeTimer = window.setTimeout(function(){
 				if(inst._windowWidth != parseInt($jq(window).width()) && inst._windowHeight != parseInt($jq(window).height()))
 				{

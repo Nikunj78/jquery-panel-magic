@@ -5,26 +5,25 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-	<title>untitled</title>
+	<title>jQuery Panel Magic Demo Version 1.1.1 | A Presentation Layout for Small Websites</title>
+	<meta name="description" content="jQuery Panel Magic is a new take on website navigation. Using a matrix or grid style layout for your website, you can easily implement this plugin for small websites and web applications. It gives you more room for your design and provides a cool new approach to a sitemap." />
 	
 	<style type="text/css">
-	body{margin:0;padding:0;background:#FFF url('stripe.png');color:#000;}
-	a{outline:none;color:#000;font-size:84px}
+	body{margin:0;padding:0;background:#FFF url('patternhead-pattern35c.png') fixed;color:#87412b;font-family:'Trebuchet MS', Verdana}
+	a{outline:none;color:#87412b;font-size:64px;text-decoration:none}
+	a:hover{color:#FFAC2D}
+	a.normal{font-size:17px}
 	p{margin:8px 0}
 	
 	/* panel default styles */
-	/* .panel{border:5px solid #FFF;background:#CCC;padding-top:10px}	*/
 	.panel{padding-top:10px;}	
-	.content {background:#FFF;border:5px solid #BFBFBF;padding:10px;width:930px;height:92%;overflow:auto;margin:0 auto 0 auto;}	
+	.content {background:#FFF;font-size:17px;border:6px solid #87412b;padding:10px;width:948px;height:92%;overflow:auto;margin:0 auto 0 auto;}	
 	
 	/* styling for the "sitemap" button */
 	#overview{cursor:pointer;font:bold 1.2em/3em Arial,sans-serif;text-transform:uppercase;color:#FFF;-webkit-border-radius:5px;-moz-border-radius:5px;top:0;right:0;width:20em;height:3em;background:black;text-align:center}
-	
-	h1{color:#000;font:bold 64px/64px Arial,sans-serif;margin:8px 0;padding:0}
-	h1 a{color:#000}
 	</style>
 	
-	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.min.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
 	<!-- Easing not required -->
 	<script type="text/javascript" src="jquery.easing.js"></script>
 	<script type="text/javascript" src="jquery.panelmagic.js"></script>
@@ -34,7 +33,7 @@
 <body>
 	<div id="home" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#orange');return false">orange</a>		
+			<a href="" onclick="$pm.loadPanel('#orange');return false" title="Click to switch page">jump to another panel</a>		
 			<p>here is some additional content.</p>	
 		</div>
 	</div>
@@ -42,17 +41,47 @@
 		<div class="content">
 			<a href="" onclick="$pm.loadPanel('#purple');return false">purple</a>
 			<p>here is some additional content.</p>	
+			<hr />
+			<p><a class="normal" href="http://code.google.com/p/jquery-panel-magic/">Get the jQuery Panel Magic Code From Google Code</a></p>
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
 		</div>
 	</div>
 	<div id="contact" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#teal');return false">teal</a>
+			<a href="" onclick="$pm.loadPanel('#teal');return false" title="Click to switch page">jump to another panel</a>
 			<p>here is some additional content.</p>	
+			<hr />
+			<p><a class="normal" href="http://code.google.com/p/jquery-panel-magic/">Get the jQuery Panel Magic Code From Google Code</a></p>
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
 		</div>
 	</div>
 	<div id="company" class="panel">	
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>		
 			<p>here is some additional content.</p>		
 		</div>
 	</div>
@@ -62,30 +91,92 @@
 			   Borrowed image
 			   <img src="http://www.google.com/intl/en_ALL/images/logo.gif" width="276" height="110" />
 				<p>here is a fixed width layout inside the panels</p>
+				
+				<hr />
+				<p><a class="normal" href="http://code.google.com/p/jquery-panel-magic/">Get the jQuery Panel Magic Code From Google Code</a></p>
+   			<hr />
+				<p>Like this plugin? Please donate.</p>
+				<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+				<input type="hidden" name="cmd" value="_donations">
+				<input type="hidden" name="business" value="webnerd@verizon.net">
+				<input type="hidden" name="lc" value="US">
+				<input type="hidden" name="item_name" value="Craig Hoover">
+				<input type="hidden" name="no_note" value="0">
+				<input type="hidden" name="currency_code" value="USD">
+				<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+				<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+				<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+				</form>
+
 			</div>	
 		</div>
 	</div>
 	<div id="orange" class="panel">			
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#contact');return false">contact</a>	
-			<p>here is some additional content.</p>			
+			<a href="" onclick="$pm.loadPanel('#contact');return false" title="Click to switch page">jump to another panel</a>	
+			<p>here is some additional content.</p>	
+			<hr />
+			<p><a class="normal" href="http://code.google.com/p/jquery-panel-magic/">Get the jQuery Panel Magic Code From Google Code</a></p>
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>		
 		</div>
 	</div>
 	<div id="teal" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>		
 			<p>here is some additional content.</p>	
+			<hr />
+			<p><a class="normal" href="http://code.google.com/p/jquery-panel-magic/">Get the jQuery Panel Magic Code From Google Code</a></p>
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
 		</div>
 	</div>	
 	<div id="extra1" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>		
 			<p>here is some additional content.</p>	
+			<hr />
+			<p><a class="normal" href="http://code.google.com/p/jquery-panel-magic/">Get the jQuery Panel Magic Code From Google Code</a></p>
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
 		</div>
 	</div>
 	<div id="extra2" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>		
 			<p>here is some additional content.</p>	
 			<p>here is some additional content.</p>	
 			<p>here is some additional content.</p>	
@@ -106,47 +197,125 @@
 			<p>here is some additional content.</p>	
 			<p>here is some additional content.</p>	
 			<p>here is some additional content.</p>	
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
 		</div>
 	</div>
 	<div id="extra3" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>	
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>	
 			<p>here is some additional content.</p>		
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
 		</div>
 	</div>
 	<div id="extra4" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>	
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>	
 			<p>here is some additional content.</p>		
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
 		</div>
 	</div>
 	<div id="extra5" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
-			<p>here is some additional content.</p>	
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>		
+			<p>here is some additional content.</p>
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>	
 		</div>
 	</div>
 	<div id="extra6" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>	
-			<p>here is some additional content.</p>		
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>	
+			<p>here is some additional content.</p>
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>		
 		</div>
 	</div>
 	<div id="extra7" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
-			<p>here is some additional content.</p>	
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>		
+			<p>here is some additional content.</p>
+			<hr />
+			<p>Like this plugin? Please donate.</p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_donations">
+			<input type="hidden" name="business" value="webnerd@verizon.net">
+			<input type="hidden" name="lc" value="US">
+			<input type="hidden" name="item_name" value="Craig Hoover">
+			<input type="hidden" name="no_note" value="0">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_SM.gif:NonHostedGuest">
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>	
 		</div>
 	</div>
 	<div id="extra8" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>	
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>	
 			<p>here is some additional content.</p>		
 		</div>
 	</div>
 	<div id="extra9" class="panel">
 		<div class="content">
-			<a href="" onclick="$pm.loadPanel('#home');return false">home</a>		
+			<a href="" onclick="$pm.loadPanel('#home');return false" title="Click to switch page">jump to another panel</a>		
 			<p>Here is some additional content.</p>	
 			<p>You will see this content in the sitemap exactly the way it appears on the page!</p>
 		</div>
@@ -155,7 +324,7 @@
 		sitemap
 	</div>
 	<script type="text/javascript">
-	/*<![CDATA[*/		
+	//<![CDATA[
 		var $pm = $jq.panelMagic({
 			resizeTimer:1000,
 			openingPanel:'#purple',
@@ -164,13 +333,29 @@
 			gridURLParam:'sitemap',
 			panelPreviewScale: 1.75,
 			previewPause: 150,
-			scrollTimer:1500,
-			scrollEasing:'bounceout',
+			scrollTimer:1200,
+			scrollEasing:'backin',
 			gridLoader:'#overview',
-			gridLoaderOpacity:.5,
+			gridLoaderOpacity:.65,
 			gridLoaderOffset:{bottom:20,right:20}
 		});
-	/*]]>*/	
+	//]]>	
 	</script>
+	
+	
+   <script type="text/javascript">
+   //<![CDATA[ 
+   // THIS IS MY ANALYTICS CODE, YOU DON'T WANT THIS IF YOU USE THIS DEMO SOURCE
+   var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+   document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+   </script>
+   <script type="text/javascript">
+   try {
+   var pageTracker = _gat._getTracker("UA-3486574-5");
+   pageTracker._trackPageview();
+   } catch(err) {}
+   //]]>
+   </script>	
+	
 </body>
 </html>
