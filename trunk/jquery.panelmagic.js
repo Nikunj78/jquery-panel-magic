@@ -222,6 +222,9 @@ $jq.panelMagic = function(ops)
 	{
 		var inst = event.data.inst;
 		
+		// stop more events from occurring
+		event.stopImmediatePropagation();
+		
 		// hide panel previews
 		inst.hidePanelPreviews.call(inst);
 		
@@ -335,6 +338,9 @@ $jq.panelMagic = function(ops)
 		var panel = event.target;
 		
 		if($jq.browser.msie) var panel = inst.findPanel(event.target);
+		
+		// id is blank, some fast clicker is at work
+		if(panel.id == '') return;
 				
 		if(inst._gridActive)
 		{						
